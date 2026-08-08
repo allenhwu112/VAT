@@ -1,0 +1,19 @@
+{
+  "name": "vat-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/frontend"
+  ],
+  "scripts": {
+    "start": "concurrently --kill-others-on-fail --names frontend,backend \"npm run frontend\" \"npm run backend\"",
+    "frontend": "npm --workspace apps/frontend run dev -- --host localhost",
+    "backend": "scripts\\dotnet.cmd run --project apps/backend/Vat.Api/Vat.Api.csproj --no-restore --urls http://localhost:5000",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "npm --workspace apps/frontend run build",
+    "build:backend": "scripts\\dotnet.cmd build apps/backend/Vat.Api/Vat.Api.csproj --no-restore",
+    "restore:backend": "scripts\\dotnet.cmd restore apps/backend/Vat.Api/Vat.Api.csproj --configfile NuGet.Config"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4"
+  }
+}

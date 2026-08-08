@@ -55,3 +55,10 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Node.js / Vite
+node_modules/
+dist/
+.vite/
+.env.*
+!.env.example
