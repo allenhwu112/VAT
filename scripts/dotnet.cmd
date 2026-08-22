@@ -1,11 +1,11 @@
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 
 set "LOCAL_DOTNET=%USERPROFILE%\.dotnet\dotnet.exe"
 
 if exist "%LOCAL_DOTNET%" (
   "%LOCAL_DOTNET%" %*
-  exit /b %ERRORLEVEL%
+  exit /b !ERRORLEVEL!
 )
 
 where dotnet >nul 2>&1

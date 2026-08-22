@@ -1,89 +1,206 @@
-import { useCallback, useEffect, useState } from 'react'
-import { fetchHealth } from './api/health'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { AllCommunityModule, ModuleRegistry, themeQuartz } from 'ag-grid-community'
+import { AgGridReact } from 'ag-grid-react'
+import Alert from '@mui/material/Alert'
+import Button from '@mui/material/Button'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogContentText from '@mui/material/DialogContentText'
+import DialogTitle from '@mui/material/DialogTitle'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
+import { deleteEmployee, fetchEmployees } from './api/employees'
+import { EmployeeDialog } from './components/EmployeeDialog'
 import './styles.css'
 
-const initialHealth = {
-  status: 'loading',
-  data: null,
-  error: null,
-}
+ModuleRegistry.registerModules([AllCommunityModule])
 
-function formatTimestamp(timestamp) {
-  return new Intl.DateTimeFormat('zh-TW', {
-    dateStyle: 'medium',
-    timeStyle: 'medium',
-  }).format(new Date(timestamp))
-}
+const genderLabels = { M: '男', F: '女' }
 
 function App() {
-  const [health, setHealth] = useState(initialHealth)
+  const [employees, setEmployees] = useState([])
+  const [selectedEmployee, setSelectedEmployee] = useState(null)
+  const [gridApi, setGridApi] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [dialog, setDialog] = useState(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
-  const loadHealth = useCallback(async () => {
-    setHealth({ status: 'loading', data: null, error: null })
+  const loadEmployees = useCallback(async () => {
+    setLoading(true)
+    setError('')
 
     try {
-      const data = await fetchHealth()
-      setHealth({ status: 'success', data, error: null })
-    } catch (error) {
-      setHealth({
-        status: 'error',
-        data: null,
-        error: error instanceof Error ? error.message : '無法連線到 API。',
-      })
+      setEmployees(await fetchEmployees())
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : '無法載入員工資料。')
+    } finally {
+      setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    loadHealth()
-  }, [loadHealth])
+    loadEmployees()
+  }, [loadEmployees])
 
-  const statusLabel = {
-    loading: '檢查 API 連線中…',
-    success: 'API 連線正常',
-    error: 'API 尚未連線',
-  }[health.status]
+  const columnDefs = useMemo(
+    () => [
+      { field: 'employeeId', headerName: '編號', width: 100, sort: 'desc' },
+      { field: 'name', headerName: '姓名', flex: 1, minWidth: 150 },
+      { field: 'shortName', headerName: '簡稱', flex: 1, minWidth: 120 },
+      {
+        field: 'gender',
+        headerName: '性別',
+        width: 110,
+        valueFormatter: ({ value }) => genderLabels[value] || value,
+      },
+      { field: 'nationalId', headerName: '身份證字號', flex: 1, minWidth: 180 },
+    ],
+    [],
+  )
+
+  const clearSelection = useCallback(() => {
+    gridApi?.deselectAll()
+    setSelectedEmployee(null)
+  }, [gridApi])
+
+  const handleSaved = useCallback(async () => {
+    await loadEmployees()
+    setDialog(null)
+    clearSelection()
+  }, [clearSelection, loadEmployees])
+
+  const handleDelete = async () => {
+    if (!selectedEmployee) return
+
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await deleteEmployee(selectedEmployee.employeeId)
+      setDeleteDialogOpen(false)
+      clearSelection()
+      await loadEmployees()
+    } catch (deleteRequestError) {
+      setDeleteError(
+        deleteRequestError instanceof Error
+          ? deleteRequestError.message
+          : '刪除員工資料失敗。',
+      )
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   return (
     <main className="app-shell">
-      <section className="status-card" aria-labelledby="page-title">
-        <p className="eyebrow">VAT MONOREPO</p>
-        <h1 id="page-title">開發環境已就緒</h1>
-        <p className="intro">
-          React + Vite 前端正在確認 .NET 10 Controllers API 的連線狀態。
-        </p>
+      <section className="employee-page" aria-labelledby="page-title">
+        <header className="page-header">
+          <div>
+            <p className="eyebrow">VAT ADMINISTRATION</p>
+            <Typography component="h1" id="page-title" variant="h3">
+              員工管理
+            </Typography>
+            <p className="intro">管理 VAT 系統員工基本資料與登入密碼。</p>
+          </div>
+          <Typography className="record-count" variant="body2">
+            共 {employees.length} 筆
+          </Typography>
+        </header>
 
-        <div
-          className={`status-banner status-${health.status}`}
-          role="status"
-          aria-live="polite"
-        >
-          <span className="status-dot" aria-hidden="true" />
-          <span>{statusLabel}</span>
-        </div>
+        <Stack className="toolbar" direction="row" spacing={1}>
+          <Button variant="contained" onClick={() => setDialog({ mode: 'create' })}>
+            新增
+          </Button>
+          <Button
+            variant="outlined"
+            disabled={!selectedEmployee}
+            onClick={() => setDialog({ mode: 'edit', employee: selectedEmployee })}
+          >
+            修改
+          </Button>
+          <Button
+            color="error"
+            variant="outlined"
+            disabled={!selectedEmployee}
+            onClick={() => {
+              setDeleteError('')
+              setDeleteDialogOpen(true)
+            }}
+          >
+            刪除
+          </Button>
+          <Button variant="text" onClick={loadEmployees} disabled={loading}>
+            重新整理
+          </Button>
+        </Stack>
 
-        {health.data && (
-          <dl className="health-details">
-            <div>
-              <dt>服務</dt>
-              <dd>{health.data.service}</dd>
-            </div>
-            <div>
-              <dt>回應時間</dt>
-              <dd>{formatTimestamp(health.data.timestamp)}</dd>
-            </div>
-          </dl>
+        {error && (
+          <Alert severity="error" className="page-alert" onClose={() => setError('')}>
+            {error}
+          </Alert>
         )}
 
-        {health.error && (
-          <p className="error-message" role="alert">
-            {health.error}
-          </p>
+        {loading ? (
+          <div className="grid-message" role="status">載入員工資料中…</div>
+        ) : (
+          <div className="employee-grid ag-theme-quartz">
+            <AgGridReact
+              rowData={employees}
+              columnDefs={columnDefs}
+              defaultColDef={{ sortable: true, filter: true, resizable: true }}
+              rowSelection={{
+                mode: 'singleRow',
+                enableClickSelection: true,
+                checkboxes: false,
+              }}
+              getRowId={({ data }) => String(data.employeeId)}
+              onGridReady={({ api }) => setGridApi(api)}
+              onSelectionChanged={({ api }) =>
+                setSelectedEmployee(api.getSelectedRows()[0] || null)
+              }
+              theme={themeQuartz}
+              overlayNoRowsTemplate="目前沒有員工資料。"
+            />
+          </div>
         )}
-
-        <button type="button" onClick={loadHealth} disabled={health.status === 'loading'}>
-          {health.status === 'loading' ? '檢查中…' : '重新檢查 API'}
-        </button>
       </section>
+
+      <EmployeeDialog
+        open={Boolean(dialog)}
+        mode={dialog?.mode || 'create'}
+        employee={dialog?.employee}
+        onClose={() => setDialog(null)}
+        onSaved={handleSaved}
+      />
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={deleting ? undefined : () => setDeleteDialogOpen(false)}
+        aria-labelledby="delete-dialog-title"
+      >
+        <DialogTitle id="delete-dialog-title">確認刪除員工</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            確定要刪除「{selectedEmployee?.name}」的員工資料嗎？此動作無法復原。
+          </DialogContentText>
+          {deleteError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {deleteError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
+            取消
+          </Button>
+          <Button color="error" variant="contained" onClick={handleDelete} disabled={deleting}>
+            {deleting ? '刪除中…' : '確認刪除'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </main>
   )
 }
