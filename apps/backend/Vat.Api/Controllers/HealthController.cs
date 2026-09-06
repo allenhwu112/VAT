@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Vat.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("VAT_API/health")]
 public sealed class HealthController : ControllerBase
 {
     [HttpGet]

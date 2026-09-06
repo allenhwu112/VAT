@@ -52,4 +52,61 @@ public sealed class EmployeeMigrationTests
             "Employee_Command",
             migrationType.GetField("CommandProcedureName", BindingFlags.Public | BindingFlags.Static)!.GetValue(null));
     }
+
+    [Fact]
+    public void Employee_contact_migration_is_registered_after_employee_procedures()
+    {
+        var migrationType = typeof(BaselineVatSchema).Assembly
+            .GetType("Vat.Migrations.CreateEmployeeContactDetails");
+
+        Assert.NotNull(migrationType);
+        Assert.Equal(202608220004L, migrationType!.GetCustomAttribute<MigrationAttribute>()!.Version);
+        Assert.Equal(migrationType, migrationType.GetMethod(nameof(Migration.Up))!.DeclaringType);
+        Assert.Equal(migrationType, migrationType.GetMethod(nameof(Migration.Down))!.DeclaringType);
+    }
+
+    [Fact]
+    public void Employee_contact_migration_declares_the_new_columns_and_procedure_contract()
+    {
+        var migrationType = typeof(BaselineVatSchema).Assembly
+            .GetType("Vat.Migrations.CreateEmployeeContactDetails");
+
+        Assert.NotNull(migrationType);
+        Assert.Equal("ContactPhone", migrationType!.GetField("ContactPhoneColumnName")!.GetValue(null));
+        Assert.Equal("Address", migrationType.GetField("AddressColumnName")!.GetValue(null));
+        Assert.Equal("BirthDate", migrationType.GetField("BirthDateColumnName")!.GetValue(null));
+
+        var sourcePath = FindRepositoryFile(
+            "apps",
+            "backend",
+            "Vat.Migrations",
+            "Migrations",
+            "CreateEmployeeContactDetails.cs");
+        var source = File.ReadAllText(sourcePath);
+
+        Assert.Contains("[dbo].[Employee_Query]", source);
+        Assert.Contains("[dbo].[Employee_Command]", source);
+        Assert.Contains("@ContactPhone", source);
+        Assert.Contains("@Address", source);
+        Assert.Contains("@BirthDate", source);
+        Assert.Contains("[ContactPhone]", source);
+        Assert.Contains("[Address]", source);
+        Assert.Contains("[BirthDate]", source);
+    }
+
+    private static string FindRepositoryFile(params string[] pathSegments)
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
+             directory is not null;
+             directory = directory.Parent)
+        {
+            var candidate = Path.Combine([directory.FullName, .. pathSegments]);
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        throw new FileNotFoundException("Could not find the repository file.", Path.Combine(pathSegments));
+    }
 }

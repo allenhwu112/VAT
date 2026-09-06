@@ -1,206 +1,67 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AllCommunityModule, ModuleRegistry, themeQuartz } from 'ag-grid-community'
-import { AgGridReact } from 'ag-grid-react'
-import Alert from '@mui/material/Alert'
-import Button from '@mui/material/Button'
-import Dialog from '@mui/material/Dialog'
-import DialogActions from '@mui/material/DialogActions'
-import DialogContent from '@mui/material/DialogContent'
-import DialogContentText from '@mui/material/DialogContentText'
-import DialogTitle from '@mui/material/DialogTitle'
-import Stack from '@mui/material/Stack'
-import Typography from '@mui/material/Typography'
-import { deleteEmployee, fetchEmployees } from './api/employees'
-import { EmployeeDialog } from './components/EmployeeDialog'
+import { useCallback, useEffect, useState } from 'react'
+import { ClientsPage } from './pages/ClientsPage'
+import { EmployeesPage } from './pages/EmployeesPage'
+import { getUiPath, resolveUiPage } from './routes'
 import './styles.css'
 
-ModuleRegistry.registerModules([AllCommunityModule])
-
-const genderLabels = { M: '男', F: '女' }
-
 function App() {
-  const [employees, setEmployees] = useState([])
-  const [selectedEmployee, setSelectedEmployee] = useState(null)
-  const [gridApi, setGridApi] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [dialog, setDialog] = useState(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deleteError, setDeleteError] = useState('')
-  const [deleting, setDeleting] = useState(false)
+  const [page, setPage] = useState(() => resolveUiPage(window.location.pathname))
 
-  const loadEmployees = useCallback(async () => {
-    setLoading(true)
-    setError('')
-
-    try {
-      setEmployees(await fetchEmployees())
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : '無法載入員工資料。')
-    } finally {
-      setLoading(false)
+  const navigate = useCallback((nextPage) => {
+    const nextPath = getUiPath(nextPage)
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({}, '', nextPath)
     }
+    setPage(nextPage)
   }, [])
 
   useEffect(() => {
-    loadEmployees()
-  }, [loadEmployees])
-
-  const columnDefs = useMemo(
-    () => [
-      { field: 'employeeId', headerName: '編號', width: 100, sort: 'desc' },
-      { field: 'name', headerName: '姓名', flex: 1, minWidth: 150 },
-      { field: 'shortName', headerName: '簡稱', flex: 1, minWidth: 120 },
-      {
-        field: 'gender',
-        headerName: '性別',
-        width: 110,
-        valueFormatter: ({ value }) => genderLabels[value] || value,
-      },
-      { field: 'nationalId', headerName: '身份證字號', flex: 1, minWidth: 180 },
-    ],
-    [],
-  )
-
-  const clearSelection = useCallback(() => {
-    gridApi?.deselectAll()
-    setSelectedEmployee(null)
-  }, [gridApi])
-
-  const handleSaved = useCallback(async () => {
-    await loadEmployees()
-    setDialog(null)
-    clearSelection()
-  }, [clearSelection, loadEmployees])
-
-  const handleDelete = async () => {
-    if (!selectedEmployee) return
-
-    setDeleting(true)
-    setDeleteError('')
-    try {
-      await deleteEmployee(selectedEmployee.employeeId)
-      setDeleteDialogOpen(false)
-      clearSelection()
-      await loadEmployees()
-    } catch (deleteRequestError) {
-      setDeleteError(
-        deleteRequestError instanceof Error
-          ? deleteRequestError.message
-          : '刪除員工資料失敗。',
-      )
-    } finally {
-      setDeleting(false)
+    const handlePopState = () => {
+      setPage(resolveUiPage(window.location.pathname))
     }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  useEffect(() => {
+    const resolvedPage = resolveUiPage(window.location.pathname)
+    const resolvedPath = getUiPath(resolvedPage)
+
+    if (window.location.pathname !== resolvedPath) {
+      window.history.replaceState({}, '', resolvedPath)
+    }
+
+    document.title = resolvedPage === 'clients' ? 'VAT 客戶管理' : 'VAT 員工管理'
+  }, [page])
+
+  const handleNavigation = (event, nextPage) => {
+    event.preventDefault()
+    navigate(nextPage)
   }
 
   return (
     <main className="app-shell">
-      <section className="employee-page" aria-labelledby="page-title">
-        <header className="page-header">
-          <div>
-            <p className="eyebrow">VAT ADMINISTRATION</p>
-            <Typography component="h1" id="page-title" variant="h3">
-              員工管理
-            </Typography>
-            <p className="intro">管理 VAT 系統員工基本資料與登入密碼。</p>
-          </div>
-          <Typography className="record-count" variant="body2">
-            共 {employees.length} 筆
-          </Typography>
-        </header>
+      <nav className="app-navigation" aria-label="VAT 管理功能">
+        <a
+          className={page === 'employees' ? 'navigation-link active' : 'navigation-link'}
+          href={getUiPath('employees')}
+          aria-current={page === 'employees' ? 'page' : undefined}
+          onClick={(event) => handleNavigation(event, 'employees')}
+        >
+          員工管理
+        </a>
+        <a
+          className={page === 'clients' ? 'navigation-link active' : 'navigation-link'}
+          href={getUiPath('clients')}
+          aria-current={page === 'clients' ? 'page' : undefined}
+          onClick={(event) => handleNavigation(event, 'clients')}
+        >
+          客戶管理
+        </a>
+      </nav>
 
-        <Stack className="toolbar" direction="row" spacing={1}>
-          <Button variant="contained" onClick={() => setDialog({ mode: 'create' })}>
-            新增
-          </Button>
-          <Button
-            variant="outlined"
-            disabled={!selectedEmployee}
-            onClick={() => setDialog({ mode: 'edit', employee: selectedEmployee })}
-          >
-            修改
-          </Button>
-          <Button
-            color="error"
-            variant="outlined"
-            disabled={!selectedEmployee}
-            onClick={() => {
-              setDeleteError('')
-              setDeleteDialogOpen(true)
-            }}
-          >
-            刪除
-          </Button>
-          <Button variant="text" onClick={loadEmployees} disabled={loading}>
-            重新整理
-          </Button>
-        </Stack>
-
-        {error && (
-          <Alert severity="error" className="page-alert" onClose={() => setError('')}>
-            {error}
-          </Alert>
-        )}
-
-        {loading ? (
-          <div className="grid-message" role="status">載入員工資料中…</div>
-        ) : (
-          <div className="employee-grid ag-theme-quartz">
-            <AgGridReact
-              rowData={employees}
-              columnDefs={columnDefs}
-              defaultColDef={{ sortable: true, filter: true, resizable: true }}
-              rowSelection={{
-                mode: 'singleRow',
-                enableClickSelection: true,
-                checkboxes: false,
-              }}
-              getRowId={({ data }) => String(data.employeeId)}
-              onGridReady={({ api }) => setGridApi(api)}
-              onSelectionChanged={({ api }) =>
-                setSelectedEmployee(api.getSelectedRows()[0] || null)
-              }
-              theme={themeQuartz}
-              overlayNoRowsTemplate="目前沒有員工資料。"
-            />
-          </div>
-        )}
-      </section>
-
-      <EmployeeDialog
-        open={Boolean(dialog)}
-        mode={dialog?.mode || 'create'}
-        employee={dialog?.employee}
-        onClose={() => setDialog(null)}
-        onSaved={handleSaved}
-      />
-
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={deleting ? undefined : () => setDeleteDialogOpen(false)}
-        aria-labelledby="delete-dialog-title"
-      >
-        <DialogTitle id="delete-dialog-title">確認刪除員工</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            確定要刪除「{selectedEmployee?.name}」的員工資料嗎？此動作無法復原。
-          </DialogContentText>
-          {deleteError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {deleteError}
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
-            取消
-          </Button>
-          <Button color="error" variant="contained" onClick={handleDelete} disabled={deleting}>
-            {deleting ? '刪除中…' : '確認刪除'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {page === 'clients' ? <ClientsPage /> : <EmployeesPage />}
     </main>
   )
 }

@@ -28,7 +28,41 @@ button {
     linear-gradient(135deg, #f8faff 0%, #e7ebff 100%);
 }
 
-.employee-page {
+.app-navigation {
+  display: flex;
+  width: min(100%, 1180px);
+  gap: 0.5rem;
+  margin: 0 auto 1rem;
+  padding: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 0.75rem 2rem rgba(48, 67, 187, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.navigation-link {
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  color: #5e687d;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.navigation-link:hover {
+  color: #4255d4;
+  background: #eef0ff;
+}
+
+.navigation-link.active {
+  color: #fff;
+  background: #5265df;
+  box-shadow: 0 0.4rem 1rem rgba(82, 101, 223, 0.28);
+}
+
+.management-page {
   width: min(100%, 1180px);
   min-height: calc(100vh - clamp(2rem, 8vw, 6rem));
   margin: 0 auto;
@@ -85,7 +119,7 @@ button {
   margin-bottom: 1rem;
 }
 
-.employee-grid {
+.management-grid {
   width: 100%;
   height: min(66vh, 620px);
   min-height: 360px;
@@ -113,7 +147,7 @@ button {
     flex-wrap: wrap;
   }
 
-  .employee-grid {
+  .management-grid {
     min-height: 420px;
   }
 }

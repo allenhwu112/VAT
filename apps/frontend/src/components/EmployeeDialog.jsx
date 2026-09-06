@@ -28,6 +28,9 @@ function getInitialForm(mode, employee) {
       gender: employee.gender,
       nationalId: employee.nationalId,
       password: '',
+      contactPhone: employee.contactPhone || '',
+      address: employee.address || '',
+      birthDate: employee.birthDate || '',
     }
   }
 
@@ -142,6 +145,39 @@ export function EmployeeDialog({ mode, employee, open, onClose, onSaved }) {
               helperText={errors.nationalId || '格式：一碼英文字母加九碼數字。'}
               inputProps={{ maxLength: 10, style: { textTransform: 'uppercase' } }}
               required
+            />
+
+            <TextField
+              fullWidth
+              label="聯絡電話"
+              value={form.contactPhone}
+              onChange={handleChange('contactPhone')}
+              error={Boolean(errors.contactPhone)}
+              helperText={errors.contactPhone || '選填，最多 30 個字元。'}
+              inputProps={{ maxLength: 30 }}
+            />
+
+            <TextField
+              fullWidth
+              label="地址"
+              value={form.address}
+              onChange={handleChange('address')}
+              error={Boolean(errors.address)}
+              helperText={errors.address || '選填，最多 255 個字元。'}
+              inputProps={{ maxLength: 255 }}
+              multiline
+              minRows={2}
+            />
+
+            <TextField
+              fullWidth
+              label="出生年月日"
+              type="date"
+              value={form.birthDate}
+              onChange={handleChange('birthDate')}
+              error={Boolean(errors.birthDate)}
+              helperText={errors.birthDate || '選填，格式：YYYY-MM-DD。'}
+              InputLabelProps={{ shrink: true }}
             />
 
             <TextField

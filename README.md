@@ -47,7 +47,8 @@ npm start
 
 會同時啟動：
 
-- 前端：<http://localhost:5173>
+- 前端員工管理：<http://localhost:5173/VAT_UI/employees>
+- 前端客戶管理：<http://localhost:5173/VAT_UI/clients>
 - 後端：<http://localhost:5000>
 
 如果 PowerShell 阻擋 npm script，使用：
@@ -77,17 +78,27 @@ npm run build:backend
 健康檢查端點：
 
 ```text
-GET http://localhost:5000/api/health
+GET http://localhost:5000/VAT_API/health
 ```
 
 員工管理端點：
 
 ```text
-GET    http://localhost:5000/api/employees
-GET    http://localhost:5000/api/employees/{employeeId}
-POST   http://localhost:5000/api/employees
-PUT    http://localhost:5000/api/employees/{employeeId}
-DELETE http://localhost:5000/api/employees/{employeeId}
+GET    http://localhost:5000/VAT_API/employees
+GET    http://localhost:5000/VAT_API/employees/{employeeId}
+POST   http://localhost:5000/VAT_API/employees
+PUT    http://localhost:5000/VAT_API/employees/{employeeId}
+DELETE http://localhost:5000/VAT_API/employees/{employeeId}
+```
+
+客戶管理端點：
+
+```text
+GET    http://localhost:5000/VAT_API/clients
+GET    http://localhost:5000/VAT_API/clients/{clientId}
+POST   http://localhost:5000/VAT_API/clients
+PUT    http://localhost:5000/VAT_API/clients/{clientId}
+DELETE http://localhost:5000/VAT_API/clients/{clientId}
 ```
 
 員工清單及新增／修改回應不會回傳 `Password`。目前資料表依需求暫存明碼密碼；正式環境使用前應改為不可逆密碼雜湊。
@@ -127,4 +138,4 @@ npm run migrate:vat
 npm run migrate:vat:down
 ```
 
-目前 migration 為 baseline `202608220001`、員工資料表 `202608220002` 及員工 Stored Procedure `202608220003`。FluentMigrator 會使用自己的 `VersionInfo` 表追蹤版本；已執行的 migration 不應直接修改，後續 schema 變更應建立更高版本的 migration。
+目前 migration 為 baseline `202608220001`、員工資料表 `202608220002`、員工 Stored Procedure `202608220003`、員工聯絡資料 `202608220004`、客戶資料表 `202609060001` 及客戶 Stored Procedure `202609060002`。FluentMigrator 會使用自己的 `VersionInfo` 表追蹤版本；已執行的 migration 不應直接修改，後續 schema 變更應建立更高版本的 migration。

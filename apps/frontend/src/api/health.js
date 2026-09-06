@@ -4,7 +4,7 @@ const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 )
 
 export async function fetchHealth() {
-  const response = await fetch(`${apiBaseUrl}/api/health`, {
+  const response = await fetch(`${apiBaseUrl}/VAT_API/health`, {
     headers: {
       Accept: 'application/json',
     },

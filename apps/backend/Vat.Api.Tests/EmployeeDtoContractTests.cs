@@ -17,7 +17,7 @@ public sealed class EmployeeDtoContractTests
 
         Assert.NotNull(controllerType);
         var route = controllerType!.GetCustomAttribute<RouteAttribute>();
-        Assert.Equal("api/employees", route?.Template);
+        Assert.Equal("VAT_API/employees", route?.Template);
     }
 
     [Fact]
@@ -57,6 +57,58 @@ public sealed class EmployeeDtoContractTests
         var responseType = GetTypeOrFail("Vat.Api.Models.EmployeeResponse");
 
         Assert.Null(responseType.GetProperty("Password"));
+    }
+
+    [Fact]
+    public void Employee_requests_and_response_include_optional_contact_details()
+    {
+        var requestType = GetTypeOrFail("Vat.Api.Models.CreateEmployeeRequest");
+        var responseType = GetTypeOrFail("Vat.Api.Models.EmployeeResponse");
+
+        Assert.Equal(typeof(string), requestType.GetProperty("ContactPhone")?.PropertyType);
+        Assert.Equal(typeof(string), requestType.GetProperty("Address")?.PropertyType);
+        Assert.Equal(typeof(DateOnly?), requestType.GetProperty("BirthDate")?.PropertyType);
+        Assert.Equal(typeof(string), responseType.GetProperty("ContactPhone")?.PropertyType);
+        Assert.Equal(typeof(string), responseType.GetProperty("Address")?.PropertyType);
+        Assert.Equal(typeof(DateOnly?), responseType.GetProperty("BirthDate")?.PropertyType);
+    }
+
+    [Fact]
+    public void Optional_contact_details_allow_null_values()
+    {
+        var requestType = GetTypeOrFail("Vat.Api.Models.CreateEmployeeRequest");
+        var request = Activator.CreateInstance(requestType)!;
+
+        Set(requestType, request, "Name", "王小明");
+        Set(requestType, request, "ShortName", "小明");
+        Set(requestType, request, "Gender", "M");
+        Set(requestType, request, "NationalId", "A123456789");
+        Set(requestType, request, "Password", "temporary-password");
+        Set(requestType, request, "ContactPhone", null);
+        Set(requestType, request, "Address", null);
+        Set(requestType, request, "BirthDate", null);
+
+        Assert.Empty(Validate(request));
+    }
+
+    [Fact]
+    public void Contact_details_reject_values_over_the_declared_limits()
+    {
+        var requestType = GetTypeOrFail("Vat.Api.Models.CreateEmployeeRequest");
+        var request = Activator.CreateInstance(requestType)!;
+
+        Set(requestType, request, "Name", "王小明");
+        Set(requestType, request, "ShortName", "小明");
+        Set(requestType, request, "Gender", "M");
+        Set(requestType, request, "NationalId", "A123456789");
+        Set(requestType, request, "Password", "temporary-password");
+        Set(requestType, request, "ContactPhone", new string('0', 31));
+        Set(requestType, request, "Address", new string('台', 256));
+
+        var errors = Validate(request);
+
+        Assert.Contains(errors, error => error.MemberNames.Contains("ContactPhone"));
+        Assert.Contains(errors, error => error.MemberNames.Contains("Address"));
     }
 
     private static Type GetTypeOrFail(string typeName)

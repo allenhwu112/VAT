@@ -4,6 +4,21 @@ const apiBaseUrl = (import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000
 )
 
 const nationalIdPattern = /^[A-Z][0-9]{9}$/
+const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/
+
+function isValidIsoDate(value) {
+  if (!value) return true
+  if (!isoDatePattern.test(value)) return false
+
+  const [year, month, day] = value.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day))
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  )
+}
 
 export const emptyEmployeeForm = {
   name: '',
@@ -11,6 +26,9 @@ export const emptyEmployeeForm = {
   gender: 'M',
   nationalId: '',
   password: '',
+  contactPhone: '',
+  address: '',
+  birthDate: '',
 }
 
 export function validateEmployeeForm(values, mode = 'create') {
@@ -37,6 +55,20 @@ export function validateEmployeeForm(values, mode = 'create') {
     errors.nationalId = '身份證字號格式不正確。'
   }
 
+  const contactPhone = values.contactPhone?.trim() || ''
+  if (contactPhone.length > 30) {
+    errors.contactPhone = '聯絡電話不可超過 30 個字元。'
+  }
+
+  const address = values.address?.trim() || ''
+  if (address.length > 255) {
+    errors.address = '地址不可超過 255 個字元。'
+  }
+
+  if (!isValidIsoDate(values.birthDate)) {
+    errors.birthDate = '出生年月日格式不正確。'
+  }
+
   if (mode === 'create' && !values.password) {
     errors.password = '密碼為必填欄位。'
   } else if (values.password?.length > 255) {
@@ -53,6 +85,9 @@ export function toEmployeeRequest(values, mode = 'create') {
     gender: values.gender,
     nationalId: values.nationalId.trim().toUpperCase(),
     password: mode === 'edit' && !values.password ? null : values.password,
+    contactPhone: values.contactPhone?.trim() || null,
+    address: values.address?.trim() || null,
+    birthDate: values.birthDate || null,
   }
 }
 
@@ -82,12 +117,12 @@ async function request(path, options = {}) {
 }
 
 export async function fetchEmployees() {
-  const body = await request('/api/employees')
+  const body = await request('/VAT_API/employees')
   return body?.data || []
 }
 
 export async function createEmployee(employee) {
-  const body = await request('/api/employees', {
+  const body = await request('/VAT_API/employees', {
     method: 'POST',
     body: JSON.stringify(employee),
   })
@@ -95,7 +130,7 @@ export async function createEmployee(employee) {
 }
 
 export async function updateEmployee(employeeId, employee) {
-  const body = await request(`/api/employees/${employeeId}`, {
+  const body = await request(`/VAT_API/employees/${employeeId}`, {
     method: 'PUT',
     body: JSON.stringify(employee),
   })
@@ -103,5 +138,5 @@ export async function updateEmployee(employeeId, employee) {
 }
 
 export async function deleteEmployee(employeeId) {
-  await request(`/api/employees/${employeeId}`, { method: 'DELETE' })
+  await request(`/VAT_API/employees/${employeeId}`, { method: 'DELETE' })
 }

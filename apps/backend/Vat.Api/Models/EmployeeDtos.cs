@@ -21,6 +21,14 @@ public abstract class EmployeeRequestBase : IValidatableObject
     [RegularExpression("^[A-Z][0-9]{9}$", ErrorMessage = "身份證字號格式不正確。")]
     public string? NationalId { get; set; }
 
+    [StringLength(30, ErrorMessage = "聯絡電話不可超過 30 個字元。")]
+    public string? ContactPhone { get; set; }
+
+    [StringLength(255, ErrorMessage = "地址不可超過 255 個字元。")]
+    public string? Address { get; set; }
+
+    public DateOnly? BirthDate { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (string.IsNullOrWhiteSpace(Name))
@@ -63,4 +71,7 @@ public sealed record EmployeeResponse(
     string Name,
     string ShortName,
     string Gender,
-    string NationalId);
+    string NationalId,
+    string? ContactPhone,
+    string? Address,
+    DateOnly? BirthDate);

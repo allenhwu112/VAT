@@ -79,6 +79,9 @@ public sealed class EmployeeRepository(IConfiguration configuration) : IEmployee
             gender: request.Gender,
             nationalId: request.NationalId,
             password: request.Password,
+            contactPhone: request.ContactPhone,
+            address: request.Address,
+            birthDate: request.BirthDate,
             cancellationToken);
     }
 
@@ -95,6 +98,9 @@ public sealed class EmployeeRepository(IConfiguration configuration) : IEmployee
             gender: request.Gender,
             nationalId: request.NationalId,
             password: request.Password,
+            contactPhone: request.ContactPhone,
+            address: request.Address,
+            birthDate: request.BirthDate,
             cancellationToken);
     }
 
@@ -113,7 +119,10 @@ public sealed class EmployeeRepository(IConfiguration configuration) : IEmployee
                 shortName: null,
                 gender: null,
                 nationalId: null,
-                password: null);
+                password: null,
+                contactPhone: null,
+                address: null,
+                birthDate: null);
 
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
@@ -135,6 +144,9 @@ public sealed class EmployeeRepository(IConfiguration configuration) : IEmployee
         string? gender,
         string? nationalId,
         string? password,
+        string? contactPhone,
+        string? address,
+        DateOnly? birthDate,
         CancellationToken cancellationToken)
     {
         try
@@ -150,7 +162,10 @@ public sealed class EmployeeRepository(IConfiguration configuration) : IEmployee
                 shortName,
                 gender,
                 nationalId,
-                password);
+                password,
+                contactPhone,
+                address,
+                birthDate);
 
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             if (!await reader.ReadAsync(cancellationToken))
@@ -178,7 +193,10 @@ public sealed class EmployeeRepository(IConfiguration configuration) : IEmployee
         string? shortName,
         string? gender,
         string? nationalId,
-        string? password)
+        string? password,
+        string? contactPhone,
+        string? address,
+        DateOnly? birthDate)
     {
         var command = new SqlCommand(CommandProcedure, connection)
         {
@@ -196,17 +214,38 @@ public sealed class EmployeeRepository(IConfiguration configuration) : IEmployee
             nationalId?.Trim().ToUpperInvariant() ?? (object)DBNull.Value;
         command.Parameters.Add("@Password", SqlDbType.NVarChar, 255).Value =
             password ?? (object)DBNull.Value;
+        command.Parameters.Add("@ContactPhone", SqlDbType.NVarChar, 30).Value =
+            contactPhone?.Trim() ?? (object)DBNull.Value;
+        command.Parameters.Add("@Address", SqlDbType.NVarChar, 255).Value =
+            address?.Trim() ?? (object)DBNull.Value;
+        command.Parameters.Add("@BirthDate", SqlDbType.Date).Value =
+            birthDate is null
+                ? DBNull.Value
+                : birthDate.Value.ToDateTime(TimeOnly.MinValue);
 
         return command;
     }
 
     private static EmployeeResponse MapEmployee(SqlDataReader reader)
     {
+        var contactPhoneOrdinal = reader.GetOrdinal("ContactPhone");
+        var addressOrdinal = reader.GetOrdinal("Address");
+        var birthDateOrdinal = reader.GetOrdinal("BirthDate");
+
         return new EmployeeResponse(
             EmployeeId: reader.GetInt32(reader.GetOrdinal("EmployeeId")),
             Name: reader.GetString(reader.GetOrdinal("Name")),
             ShortName: reader.GetString(reader.GetOrdinal("ShortName")),
             Gender: reader.GetString(reader.GetOrdinal("Gender")).Trim(),
-            NationalId: reader.GetString(reader.GetOrdinal("NationalId")));
+            NationalId: reader.GetString(reader.GetOrdinal("NationalId")),
+            ContactPhone: reader.IsDBNull(contactPhoneOrdinal)
+                ? null
+                : reader.GetString(contactPhoneOrdinal),
+            Address: reader.IsDBNull(addressOrdinal)
+                ? null
+                : reader.GetString(addressOrdinal),
+            BirthDate: reader.IsDBNull(birthDateOrdinal)
+                ? null
+                : DateOnly.FromDateTime(reader.GetDateTime(birthDateOrdinal)));
     }
 }

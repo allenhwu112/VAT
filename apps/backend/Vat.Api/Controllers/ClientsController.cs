@@ -5,105 +5,105 @@ using Vat.Api.Models;
 namespace Vat.Api.Controllers;
 
 [ApiController]
-[Route("VAT_API/employees")]
-public sealed class EmployeesController(IEmployeeRepository repository) : ControllerBase
+[Route("VAT_API/clients")]
+public sealed class ClientsController(IClientRepository repository) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<object>> GetAll(CancellationToken cancellationToken)
     {
-        var employees = await repository.QueryAsync(null, cancellationToken);
-        return Ok(new { data = employees });
+        var clients = await repository.QueryAsync(null, cancellationToken);
+        return Ok(new { data = clients });
     }
 
-    [HttpGet("{employeeId:int}")]
+    [HttpGet("{clientId:int}")]
     public async Task<ActionResult<object>> GetById(
-        int employeeId,
+        int clientId,
         CancellationToken cancellationToken)
     {
-        var employees = await repository.QueryAsync(employeeId, cancellationToken);
-        var employee = employees.SingleOrDefault();
+        var clients = await repository.QueryAsync(clientId, cancellationToken);
+        var client = clients.SingleOrDefault();
 
-        return employee is null
+        return client is null
             ? NotFound(new ProblemDetails
             {
                 Status = StatusCodes.Status404NotFound,
-                Title = "找不到員工",
-                Detail = "找不到指定的員工資料。",
+                Title = "找不到客戶",
+                Detail = "找不到指定的客戶資料。",
             })
-            : Ok(new { data = employee });
+            : Ok(new { data = client });
     }
 
     [HttpPost]
     public async Task<IActionResult> Create(
-        CreateEmployeeRequest request,
+        CreateClientRequest request,
         CancellationToken cancellationToken)
     {
         try
         {
-            var employee = await repository.CreateAsync(request, cancellationToken);
+            var client = await repository.CreateAsync(request, cancellationToken);
             return CreatedAtAction(
                 nameof(GetById),
-                new { employeeId = employee.EmployeeId },
-                new { data = employee });
+                new { clientId = client.ClientId },
+                new { data = client });
         }
-        catch (EmployeeConflictException exception)
+        catch (ClientConflictException exception)
         {
             return Conflict(new ProblemDetails
             {
                 Status = StatusCodes.Status409Conflict,
-                Title = "員工資料衝突",
+                Title = "客戶資料衝突",
                 Detail = exception.Message,
             });
         }
     }
 
-    [HttpPut("{employeeId:int}")]
+    [HttpPut("{clientId:int}")]
     public async Task<IActionResult> Update(
-        int employeeId,
-        UpdateEmployeeRequest request,
+        int clientId,
+        UpdateClientRequest request,
         CancellationToken cancellationToken)
     {
         try
         {
-            var employee = await repository.UpdateAsync(employeeId, request, cancellationToken);
-            return Ok(new { data = employee });
+            var client = await repository.UpdateAsync(clientId, request, cancellationToken);
+            return Ok(new { data = client });
         }
-        catch (EmployeeNotFoundException exception)
+        catch (ClientNotFoundException exception)
         {
             return NotFound(new ProblemDetails
             {
                 Status = StatusCodes.Status404NotFound,
-                Title = "找不到員工",
+                Title = "找不到客戶",
                 Detail = exception.Message,
             });
         }
-        catch (EmployeeConflictException exception)
+        catch (ClientConflictException exception)
         {
             return Conflict(new ProblemDetails
             {
                 Status = StatusCodes.Status409Conflict,
-                Title = "員工資料衝突",
+                Title = "客戶資料衝突",
                 Detail = exception.Message,
             });
         }
     }
 
-    [HttpDelete("{employeeId:int}")]
+    [HttpDelete("{clientId:int}")]
     public async Task<IActionResult> Delete(
-        int employeeId,
+        int clientId,
         CancellationToken cancellationToken)
     {
         try
         {
-            await repository.DeleteAsync(employeeId, cancellationToken);
+            await repository.DeleteAsync(clientId, cancellationToken);
             return NoContent();
         }
-        catch (EmployeeNotFoundException exception)
+        catch (ClientNotFoundException exception)
         {
             return NotFound(new ProblemDetails
             {
                 Status = StatusCodes.Status404NotFound,
-                Title = "找不到員工",
+                Title = "找不到客戶",
                 Detail = exception.Message,
             });
         }
