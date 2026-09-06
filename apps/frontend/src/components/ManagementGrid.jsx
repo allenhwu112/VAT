@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { ModuleRegistry, themeQuartz } from 'ag-grid-community'
 import { AllEnterpriseModule } from 'ag-grid-enterprise'
 import { AgGridReact } from 'ag-grid-react'
+import { getPaginationOptions } from './gridPagination'
 
 ModuleRegistry.registerModules([AllEnterpriseModule])
 
@@ -12,6 +13,8 @@ export function ManagementGrid({
   onGridReady,
   onSelectionChanged,
   onRowDoubleClicked,
+  onPaginationChanged,
+  enablePagination = false,
   noRowsMessage,
 }) {
   const defaultColDef = useMemo(
@@ -25,6 +28,7 @@ export function ManagementGrid({
         rowData={rowData}
         columnDefs={columnDefs}
         defaultColDef={defaultColDef}
+        {...getPaginationOptions(enablePagination)}
         rowSelection={{
           mode: 'singleRow',
           enableClickSelection: true,
@@ -37,6 +41,7 @@ export function ManagementGrid({
           onSelectionChanged?.(api.getSelectedRows()[0] || null, api)
         }
         onRowDoubleClicked={({ data }) => data && onRowDoubleClicked?.(data)}
+        onPaginationChanged={({ api }) => onPaginationChanged?.(api)}
         theme={themeQuartz}
         overlayNoRowsTemplate={noRowsMessage}
       />

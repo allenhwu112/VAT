@@ -49,6 +49,7 @@ npm start
 
 - 前端員工管理：<http://localhost:5173/VAT_UI/employees>
 - 前端客戶管理：<http://localhost:5173/VAT_UI/clients>
+- 前端發票管理：<http://localhost:5173/VAT_UI/invoices>
 - 後端：<http://localhost:5000>
 
 如果 PowerShell 阻擋 npm script，使用：
@@ -101,6 +102,18 @@ PUT    http://localhost:5000/VAT_API/clients/{clientId}
 DELETE http://localhost:5000/VAT_API/clients/{clientId}
 ```
 
+發票管理端點：
+
+```text
+GET    http://localhost:5000/VAT_API/invoices
+GET    http://localhost:5000/VAT_API/invoices/{invoiceId}
+POST   http://localhost:5000/VAT_API/invoices
+PUT    http://localhost:5000/VAT_API/invoices/{invoiceId}
+DELETE http://localhost:5000/VAT_API/invoices/{invoiceId}
+```
+
+發票資料的 `ElectronicInvoice` 使用勾選值；`CashRegister`、`ThreeCashRegister`、`TwoPartInvoice`、`TwoPartInvoiceCopy`、`ThreePartInvoice` 及 `ThreePartInvoiceCopy` 為必填整數，允許範圍是 `0` 到 `99`。這項欄位型別變更由 migration `202609060005` 提供。
+
 員工清單及新增／修改回應不會回傳 `Password`。目前資料表依需求暫存明碼密碼；正式環境使用前應改為不可逆密碼雜湊。
 
 OpenAPI 文件（Development）：
@@ -114,13 +127,13 @@ GET http://localhost:5000/openapi/v1.json
 後端及獨立 migration runner 共用設定鍵 `ConnectionStrings:VatDatabase`。本機預設連線字串為：
 
 ```text
-Server=localhost;Database=VAT;Integrated Security=True;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=False
+Server=(local);Database=VAT;Integrated Security=True;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=False
 ```
 
 這是 Windows 驗證，不需要在 repository 中保存密碼。可用環境變數覆寫設定：
 
 ```powershell
-$env:ConnectionStrings__VatDatabase = "Server=localhost;Database=VAT;Integrated Security=True;Encrypt=True;TrustServerCertificate=False"
+$env:ConnectionStrings__VatDatabase = "Server=(local);Database=VAT;Integrated Security=True;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=False"
 ```
 
 `VAT` 資料庫必須先存在，執行 migration 的 Windows 帳號也必須具備建立及修改資料表的權限。migration runner 不會建立資料庫，也不會在 API 啟動時自動修改資料庫。
@@ -138,4 +151,4 @@ npm run migrate:vat
 npm run migrate:vat:down
 ```
 
-目前 migration 為 baseline `202608220001`、員工資料表 `202608220002`、員工 Stored Procedure `202608220003`、員工聯絡資料 `202608220004`、客戶資料表 `202609060001` 及客戶 Stored Procedure `202609060002`。FluentMigrator 會使用自己的 `VersionInfo` 表追蹤版本；已執行的 migration 不應直接修改，後續 schema 變更應建立更高版本的 migration。
+目前 migration 為 baseline `202608220001`、員工資料表 `202608220002`、員工 Stored Procedure `202608220003`、員工聯絡資料 `202608220004`、客戶資料表 `202609060001`、客戶 Stored Procedure `202609060002`、發票資料表 `202609060003`、發票 Stored Procedure `202609060004` 及發票數量欄位 `202609060005`。FluentMigrator 會使用自己的 `VersionInfo` 表追蹤版本；已執行的 migration 不應直接修改，後續 schema 變更應建立更高版本的 migration。

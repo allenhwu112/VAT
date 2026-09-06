@@ -3,6 +3,7 @@ export const UI_PREFIX = '/VAT_UI'
 const uiPaths = Object.freeze({
   employees: `${UI_PREFIX}/employees`,
   clients: `${UI_PREFIX}/clients`,
+  invoices: `${UI_PREFIX}/invoices`,
 })
 
 function normalizePath(pathname) {
@@ -15,5 +16,9 @@ export function getUiPath(page) {
 }
 
 export function resolveUiPage(pathname) {
-  return normalizePath(pathname) === uiPaths.clients ? 'clients' : 'employees'
+  const normalizedPath = normalizePath(pathname)
+
+  if (normalizedPath === uiPaths.clients) return 'clients'
+  if (normalizedPath === uiPaths.invoices) return 'invoices'
+  return 'employees'
 }

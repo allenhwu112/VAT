@@ -10,6 +10,7 @@ if (string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("VatData
 builder.Services.AddControllers();
 builder.Services.AddSingleton<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddSingleton<IClientRepository, ClientRepository>();
+builder.Services.AddSingleton<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>

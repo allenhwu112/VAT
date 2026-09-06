@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ClientsPage } from './pages/ClientsPage'
 import { EmployeesPage } from './pages/EmployeesPage'
+import { InvoicesPage } from './pages/InvoicesPage'
 import { getUiPath, resolveUiPage } from './routes'
 import './styles.css'
 
@@ -32,7 +33,12 @@ function App() {
       window.history.replaceState({}, '', resolvedPath)
     }
 
-    document.title = resolvedPage === 'clients' ? 'VAT 客戶管理' : 'VAT 員工管理'
+    const pageTitles = {
+      employees: 'VAT 員工管理',
+      clients: 'VAT 客戶管理',
+      invoices: 'VAT 發票管理',
+    }
+    document.title = pageTitles[resolvedPage]
   }, [page])
 
   const handleNavigation = (event, nextPage) => {
@@ -59,9 +65,23 @@ function App() {
         >
           客戶管理
         </a>
+        <a
+          className={page === 'invoices' ? 'navigation-link active' : 'navigation-link'}
+          href={getUiPath('invoices')}
+          aria-current={page === 'invoices' ? 'page' : undefined}
+          onClick={(event) => handleNavigation(event, 'invoices')}
+        >
+          發票管理
+        </a>
       </nav>
 
-      {page === 'clients' ? <ClientsPage /> : <EmployeesPage />}
+      {page === 'clients' ? (
+        <ClientsPage />
+      ) : page === 'invoices' ? (
+        <InvoicesPage />
+      ) : (
+        <EmployeesPage />
+      )}
     </main>
   )
 }
