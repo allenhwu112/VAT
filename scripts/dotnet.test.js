@@ -6,6 +6,7 @@ const test = require("node:test");
 
 const {
   getLocalDotnetPath,
+  getDotnetEnvironment,
   resolveDotnetCommand,
   runDotnet,
 } = require("./dotnet");
@@ -61,6 +62,20 @@ test("falls back to dotnet on PATH when no local SDK file exists", () => {
   );
 });
 
+test("clones the caller environment for NuGet and .NET overrides", () => {
+  const environment = {
+    PATH: "/test/path",
+    NUGET_PACKAGES: "/tmp/packages",
+    DOTNET_CLI_HOME: "/tmp/dotnet-home",
+    NUGET_HTTP_CACHE_PATH: "/tmp/http-cache",
+  };
+
+  const result = getDotnetEnvironment(environment);
+
+  assert.deepEqual(result, environment);
+  assert.notEqual(result, environment);
+});
+
 test("forwards arguments to a non-shell child process with inherited stdio", () => {
   const child = new EventEmitter();
   let invocation;
@@ -77,6 +92,12 @@ test("forwards arguments to a non-shell child process with inherited stdio", () 
     ],
     {
       resolveCommand: () => "dotnet",
+      environment: {
+        PATH: "/test/path",
+        NUGET_PACKAGES: "/tmp/packages",
+        DOTNET_CLI_HOME: "/tmp/dotnet-home",
+        NUGET_HTTP_CACHE_PATH: "/tmp/http-cache",
+      },
       spawnProcess: (command, args, options) => {
         invocation = { args, command, options };
         return child;
@@ -100,6 +121,12 @@ test("forwards arguments to a non-shell child process with inherited stdio", () 
     ],
     command: "dotnet",
     options: {
+      env: {
+        PATH: "/test/path",
+        NUGET_PACKAGES: "/tmp/packages",
+        DOTNET_CLI_HOME: "/tmp/dotnet-home",
+        NUGET_HTTP_CACHE_PATH: "/tmp/http-cache",
+      },
       shell: false,
       stdio: "inherit",
     },

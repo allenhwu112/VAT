@@ -36,9 +36,14 @@ function resolveDotnetCommand(options) {
   return getLocalDotnetPath(options) || "dotnet";
 }
 
+function getDotnetEnvironment(environment = process.env) {
+  return { ...environment };
+}
+
 function runDotnet(args, {
   spawnProcess = spawn,
   resolveCommand = resolveDotnetCommand,
+  environment = process.env,
   onError = (error) => {
     console.error(`Unable to start .NET SDK: ${error.message}`);
     process.exitCode = 1;
@@ -55,6 +60,7 @@ function runDotnet(args, {
 } = {}) {
   const command = resolveCommand();
   const child = spawnProcess(command, args, {
+    env: getDotnetEnvironment(environment),
     shell: false,
     stdio: "inherit",
   });
@@ -70,6 +76,7 @@ if (require.main === module) {
 
 module.exports = {
   getLocalDotnetPath,
+  getDotnetEnvironment,
   resolveDotnetCommand,
   runDotnet,
 };
