@@ -43,8 +43,8 @@ public sealed class InvoiceRepository(IConfiguration configuration) : IInvoiceRe
     private const string QueryProcedure = "dbo.Invoice_Query";
     private const string CommandProcedure = "dbo.Invoice_Command";
 
-    private readonly string _connectionString = configuration.GetConnectionString("VatDatabase")
-        ?? throw new InvalidOperationException("Missing configuration: ConnectionStrings:VatDatabase.");
+    private readonly string _connectionString = configuration.GetConnectionString("VAT")
+        ?? throw new InvalidOperationException("Missing configuration: ConnectionStrings:VAT.");
 
     public async Task<IReadOnlyList<InvoiceResponse>> QueryAsync(
         int? invoiceId,

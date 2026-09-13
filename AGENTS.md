@@ -75,3 +75,11 @@
 - migration：先執行 `npm run migrate:vat:check`，取得明確授權後才執行 `npm run migrate:vat` 或 `npm run migrate:vat:down`
 
 本文件只建立 repository instructions，不要求新增 boundary validator、CI workflow 或其他自動 enforcement script。
+
+## 踩過的坑
+
+### 2026-09-13 SQL Server migration 同一 batch 找不到新欄位
+- **發生什麼事**：`npm start` 在套用 `AddClientCode` 時回報 SQL 錯誤 207，找不到 `ClientCode`。
+- **根本原因**：新增 `ClientCode` 欄位後，約束與 filtered unique index 在同一個 SQL batch 內立即引用該欄位，SQL Server 先編譯整個 batch 而無法解析新欄位。
+- **怎麼修的**：將新增欄位、check constraint、unique index 拆成三個獨立的 `Execute.Sql` batch，並加入回歸測試。
+- **以後怎麼避免**：SQL Server migration 新增欄位後，凡後續 DDL 會引用該欄位，都要使用獨立 batch 並先做 migration 測試。

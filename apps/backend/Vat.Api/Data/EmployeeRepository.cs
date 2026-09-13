@@ -41,8 +41,8 @@ public sealed class EmployeeRepository(IConfiguration configuration) : IEmployee
     private const string QueryProcedure = "dbo.Employee_Query";
     private const string CommandProcedure = "dbo.Employee_Command";
 
-    private readonly string _connectionString = configuration.GetConnectionString("VatDatabase")
-        ?? throw new InvalidOperationException("Missing configuration: ConnectionStrings:VatDatabase.");
+    private readonly string _connectionString = configuration.GetConnectionString("VAT")
+        ?? throw new InvalidOperationException("Missing configuration: ConnectionStrings:VAT.");
 
     public async Task<IReadOnlyList<EmployeeResponse>> QueryAsync(
         int? employeeId,

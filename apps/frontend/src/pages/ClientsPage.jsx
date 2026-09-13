@@ -42,7 +42,7 @@ export function ClientsPage() {
 
   const columnDefs = useMemo(
     () => [
-      { field: 'clientId', headerName: '編號', width: 100, sort: 'desc' },
+      { field: 'clientCode', headerName: '客編', width: 100 },
       { field: 'taxId', headerName: '統編', width: 140 },
       { field: 'fullName', headerName: '客戶全稱', flex: 2, minWidth: 220 },
       { field: 'shortName', headerName: '簡稱', flex: 1, minWidth: 140 },

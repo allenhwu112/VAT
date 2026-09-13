@@ -6,24 +6,39 @@
 
 ## Requirements
 
-### Requirement: Client master records require valid identifying and contact data
+### Requirement: Client master records support an optional manual client code and optional details
 
-The system SHALL store every client with a generated numeric client identifier, a unique eight-digit numeric tax ID, a full name, a short name, a responsible person, and an address. The four text fields SHALL be non-empty after trimming and SHALL be limited to 100, 50, 100, and 255 characters respectively.
+The system SHALL store every client with a generated numeric client identifier, an optional unique client code, and a unique eight-digit numeric tax ID. When supplied, a client code SHALL contain one ASCII English letter followed by three digits, be trimmed, normalized to uppercase, and be unique. Full name, short name, responsible person, and address MAY be omitted. When supplied, those four text fields SHALL be trimmed, blank values SHALL be stored as null, and non-blank values SHALL be limited to 100, 50, 100, and 255 characters respectively.
 
-#### Scenario: Create a client with valid required data
+#### Scenario: Create a client with only the required tax ID
 
-- **WHEN** a client is submitted with an eight-digit tax ID and non-empty values for full name, short name, responsible person, and address within the declared limits
-- **THEN** the system creates one client record, assigns a client identifier, and returns all five submitted fields using camelCase names
+- **WHEN** a client is submitted with an eight-digit tax ID and the client code and other fields are omitted or blank
+- **THEN** the system creates one client record, assigns a client identifier, stores the client code and four optional fields as null, and returns all client fields using camelCase names
 
-#### Scenario: Reject missing or whitespace-only required data
+#### Scenario: Accept a valid manual client code
 
-- **WHEN** a client create or update request omits or supplies only whitespace for any required field
-- **THEN** the system returns `400 Bad Request` identifying the invalid field and does not create or change a record
+- **WHEN** a client create or update request supplies a client code such as ` a001 `
+- **THEN** the system stores and returns the trimmed uppercase value `A001`
+
+#### Scenario: Reject an invalid or duplicate client code
+
+- **WHEN** a client create or update request supplies a client code that is not one ASCII English letter followed by three digits, or uses a code already assigned to another client
+- **THEN** the system returns `400 Bad Request` for an invalid format or `409 Conflict` for a duplicate code and does not create or change a record
+
+#### Scenario: Accept optional client details
+
+- **WHEN** a client create or update request supplies non-blank values for any optional field within its declared limit
+- **THEN** the system stores and returns those optional values after trimming
 
 #### Scenario: Reject an invalid tax ID
 
 - **WHEN** a client create or update request contains a tax ID that is not exactly eight ASCII digits
 - **THEN** the system returns `400 Bad Request` and does not create or change a record
+
+#### Scenario: Reject an optional value over its declared limit
+
+- **WHEN** a client create or update request supplies a full name, short name, responsible person, or address over its declared limit
+- **THEN** the system returns `400 Bad Request` identifying the invalid field and does not create or change a record
 
 #### Scenario: Reject a duplicate tax ID
 

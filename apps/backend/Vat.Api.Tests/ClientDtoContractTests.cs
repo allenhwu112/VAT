@@ -37,7 +37,7 @@ public sealed class ClientDtoContractTests
     }
 
     [Fact]
-    public void Client_create_request_requires_all_client_fields()
+    public void Client_create_request_requires_only_the_tax_id()
     {
         var requestType = GetTypeOrFail("Vat.Api.Models.CreateClientRequest");
         var request = Activator.CreateInstance(requestType)!;
@@ -45,10 +45,11 @@ public sealed class ClientDtoContractTests
         var errors = Validate(request);
 
         Assert.Contains(errors, error => error.MemberNames.Contains("TaxId"));
-        Assert.Contains(errors, error => error.MemberNames.Contains("FullName"));
-        Assert.Contains(errors, error => error.MemberNames.Contains("ShortName"));
-        Assert.Contains(errors, error => error.MemberNames.Contains("ResponsiblePerson"));
-        Assert.Contains(errors, error => error.MemberNames.Contains("Address"));
+        Assert.DoesNotContain(errors, error => error.MemberNames.Contains("ClientCode"));
+        Assert.DoesNotContain(errors, error => error.MemberNames.Contains("FullName"));
+        Assert.DoesNotContain(errors, error => error.MemberNames.Contains("ShortName"));
+        Assert.DoesNotContain(errors, error => error.MemberNames.Contains("ResponsiblePerson"));
+        Assert.DoesNotContain(errors, error => error.MemberNames.Contains("Address"));
     }
 
     [Fact]
@@ -67,7 +68,7 @@ public sealed class ClientDtoContractTests
     }
 
     [Fact]
-    public void Client_validation_rejects_invalid_tax_ids_and_whitespace_fields()
+    public void Client_validation_rejects_invalid_tax_ids_but_allows_whitespace_optional_fields()
     {
         var requestType = GetTypeOrFail("Vat.Api.Models.CreateClientRequest");
         var invalidTaxIdRequest = Activator.CreateInstance(requestType)!;
@@ -82,14 +83,22 @@ public sealed class ClientDtoContractTests
         Set(requestType, whitespaceNameRequest, "FullName", "   ");
 
         var whitespaceNameErrors = Validate(whitespaceNameRequest);
-        Assert.True(
-            whitespaceNameErrors.Any(error =>
-                error.ErrorMessage == "客戶全稱為必填欄位。"
-                || error.MemberNames.Contains("FullName")),
-            string.Join(
-                " | ",
-                whitespaceNameErrors.Select(error =>
-                    $"{error.ErrorMessage} [{string.Join(",", error.MemberNames)}]")));
+        Assert.DoesNotContain(
+            whitespaceNameErrors,
+            error => error.MemberNames.Contains("FullName"));
+    }
+
+    [Fact]
+    public void Client_validation_rejects_invalid_client_codes()
+    {
+        var requestType = GetTypeOrFail("Vat.Api.Models.CreateClientRequest");
+        var request = Activator.CreateInstance(requestType)!;
+        SetValidFields(requestType, request);
+        Set(requestType, request, "ClientCode", "A01");
+
+        var errors = Validate(request);
+
+        Assert.Contains(errors, error => error.MemberNames.Contains("ClientCode"));
     }
 
     [Fact]
@@ -117,6 +126,7 @@ public sealed class ClientDtoContractTests
         var responseType = GetTypeOrFail("Vat.Api.Models.ClientResponse");
 
         Assert.Equal(typeof(int), responseType.GetProperty("ClientId")?.PropertyType);
+        Assert.Equal(typeof(string), responseType.GetProperty("ClientCode")?.PropertyType);
         Assert.Equal(typeof(string), responseType.GetProperty("TaxId")?.PropertyType);
         Assert.Equal(typeof(string), responseType.GetProperty("FullName")?.PropertyType);
         Assert.Equal(typeof(string), responseType.GetProperty("ShortName")?.PropertyType);
@@ -134,6 +144,7 @@ public sealed class ClientDtoContractTests
 
     private static void SetValidFields(Type type, object target)
     {
+        Set(type, target, "ClientCode", "A001");
         Set(type, target, "TaxId", "12345678");
         Set(type, target, "FullName", "測試客戶股份有限公司");
         Set(type, target, "ShortName", "測試客戶");

@@ -4,8 +4,10 @@ const apiBaseUrl = (import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000
 )
 
 const taxIdPattern = /^[0-9]{8}$/
+const clientCodePattern = /^[A-Za-z][0-9]{3}$/
 
 export const emptyClientForm = {
+  clientCode: '',
   taxId: '',
   fullName: '',
   shortName: '',
@@ -15,11 +17,16 @@ export const emptyClientForm = {
 
 export function validateClientForm(values) {
   const errors = {}
+  const clientCode = values.clientCode?.trim() || ''
   const taxId = values.taxId?.trim() || ''
   const fullName = values.fullName?.trim() || ''
   const shortName = values.shortName?.trim() || ''
   const responsiblePerson = values.responsiblePerson?.trim() || ''
   const address = values.address?.trim() || ''
+
+  if (clientCode && !clientCodePattern.test(clientCode)) {
+    errors.clientCode = '客編格式不正確，請輸入 1 碼英文加 3 碼數字。'
+  }
 
   if (!taxId) {
     errors.taxId = '統編為必填欄位。'
@@ -27,27 +34,19 @@ export function validateClientForm(values) {
     errors.taxId = '統編格式不正確，請輸入 8 碼數字。'
   }
 
-  if (!fullName) {
-    errors.fullName = '客戶全稱為必填欄位。'
-  } else if (fullName.length > 100) {
+  if (fullName.length > 100) {
     errors.fullName = '客戶全稱不可超過 100 個字元。'
   }
 
-  if (!shortName) {
-    errors.shortName = '簡稱為必填欄位。'
-  } else if (shortName.length > 50) {
+  if (shortName.length > 50) {
     errors.shortName = '簡稱不可超過 50 個字元。'
   }
 
-  if (!responsiblePerson) {
-    errors.responsiblePerson = '負責人為必填欄位。'
-  } else if (responsiblePerson.length > 100) {
+  if (responsiblePerson.length > 100) {
     errors.responsiblePerson = '負責人不可超過 100 個字元。'
   }
 
-  if (!address) {
-    errors.address = '地址為必填欄位。'
-  } else if (address.length > 255) {
+  if (address.length > 255) {
     errors.address = '地址不可超過 255 個字元。'
   }
 
@@ -55,12 +54,23 @@ export function validateClientForm(values) {
 }
 
 export function toClientRequest(values) {
+  const optionalText = (value) => {
+    const normalized = value?.trim() || ''
+    return normalized || null
+  }
+
+  const optionalClientCode = (value) => {
+    const normalized = value?.trim() || ''
+    return normalized ? normalized.toUpperCase() : null
+  }
+
   return {
+    clientCode: optionalClientCode(values.clientCode),
     taxId: values.taxId.trim(),
-    fullName: values.fullName.trim(),
-    shortName: values.shortName.trim(),
-    responsiblePerson: values.responsiblePerson.trim(),
-    address: values.address.trim(),
+    fullName: optionalText(values.fullName),
+    shortName: optionalText(values.shortName),
+    responsiblePerson: optionalText(values.responsiblePerson),
+    address: optionalText(values.address),
   }
 }
 

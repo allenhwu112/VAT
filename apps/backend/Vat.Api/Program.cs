@@ -2,9 +2,9 @@ using Vat.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-if (string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("VatDatabase")))
+if (string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("VAT")))
 {
-    throw new InvalidOperationException("Missing configuration: ConnectionStrings:VatDatabase.");
+    throw new InvalidOperationException("Missing configuration: ConnectionStrings:VAT.");
 }
 
 builder.Services.AddControllers();

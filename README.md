@@ -124,17 +124,19 @@ GET http://localhost:5000/openapi/v1.json
 
 ## 資料庫與 FluentMigrator
 
-後端及獨立 migration runner 共用設定鍵 `ConnectionStrings:VatDatabase`。本機預設連線字串為：
+後端及獨立 migration runner 共用設定鍵 `ConnectionStrings:VAT`。目前開發設定直接連線至遠端 `192.168.25.20` 的 `VAT` 資料庫：
 
 ```text
-Server=(local);Database=VAT;Integrated Security=True;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=False
+Data Source=192.168.25.20;Initial Catalog=VAT;Persist Security Info=True;User ID=sa;Password=<秘密>;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=False
 ```
 
-這是 Windows 驗證，不需要在 repository 中保存密碼。可用環境變數覆寫設定：
+目前 `Vat.Api/appsettings.json` 依需求保存完整遠端連線設定；GitHub private repository 仍不等同於秘密管理工具，正式環境建議改用環境變數或秘密管理工具覆寫。可用環境變數覆寫設定：
 
 ```powershell
-$env:ConnectionStrings__VatDatabase = "Server=(local);Database=VAT;Integrated Security=True;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=False"
+$env:ConnectionStrings__VAT = "Data Source=192.168.25.20;Initial Catalog=VAT;Persist Security Info=True;User ID=sa;Password=<秘密>;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=False"
 ```
+
+遠端 SQL Server 若使用內部或自簽憑證，`TrustServerCertificate=True` 會保留加密並略過該憑證的信任鏈驗證；正式環境應改用本機信任的 SQL Server 憑證。若透過環境變數注入密碼，請在 process 結束後清除該變數。
 
 `VAT` 資料庫必須先存在，執行 migration 的 Windows 帳號也必須具備建立及修改資料表的權限。migration runner 不會建立資料庫，也不會在 API 啟動時自動修改資料庫。
 

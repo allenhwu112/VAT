@@ -31,7 +31,7 @@ public sealed class ClientNotFoundException : Exception
 public sealed class ClientConflictException : Exception
 {
     public ClientConflictException()
-        : base("統編已存在。")
+        : base("統編或客編已存在。")
     {
     }
 }
@@ -41,8 +41,8 @@ public sealed class ClientRepository(IConfiguration configuration) : IClientRepo
     private const string QueryProcedure = "dbo.Client_Query";
     private const string CommandProcedure = "dbo.Client_Command";
 
-    private readonly string _connectionString = configuration.GetConnectionString("VatDatabase")
-        ?? throw new InvalidOperationException("Missing configuration: ConnectionStrings:VatDatabase.");
+    private readonly string _connectionString = configuration.GetConnectionString("VAT")
+        ?? throw new InvalidOperationException("Missing configuration: ConnectionStrings:VAT.");
 
     public async Task<IReadOnlyList<ClientResponse>> QueryAsync(
         int? clientId,
@@ -74,6 +74,7 @@ public sealed class ClientRepository(IConfiguration configuration) : IClientRepo
         return ExecuteWriteAsync(
             action: "CREATE",
             clientId: null,
+            clientCode: request.ClientCode,
             taxId: request.TaxId,
             fullName: request.FullName,
             shortName: request.ShortName,
@@ -90,6 +91,7 @@ public sealed class ClientRepository(IConfiguration configuration) : IClientRepo
         return ExecuteWriteAsync(
             action: "UPDATE",
             clientId,
+            clientCode: request.ClientCode,
             taxId: request.TaxId,
             fullName: request.FullName,
             shortName: request.ShortName,
@@ -109,6 +111,7 @@ public sealed class ClientRepository(IConfiguration configuration) : IClientRepo
                 connection,
                 action: "DELETE",
                 clientId,
+                clientCode: null,
                 taxId: null,
                 fullName: null,
                 shortName: null,
@@ -130,6 +133,7 @@ public sealed class ClientRepository(IConfiguration configuration) : IClientRepo
     private async Task<ClientResponse> ExecuteWriteAsync(
         string action,
         int? clientId,
+        string? clientCode,
         string? taxId,
         string? fullName,
         string? shortName,
@@ -146,6 +150,7 @@ public sealed class ClientRepository(IConfiguration configuration) : IClientRepo
                 connection,
                 action,
                 clientId,
+                clientCode,
                 taxId,
                 fullName,
                 shortName,
@@ -174,6 +179,7 @@ public sealed class ClientRepository(IConfiguration configuration) : IClientRepo
         SqlConnection connection,
         string action,
         int? clientId,
+        string? clientCode,
         string? taxId,
         string? fullName,
         string? shortName,
@@ -187,6 +193,8 @@ public sealed class ClientRepository(IConfiguration configuration) : IClientRepo
 
         command.Parameters.Add("@Action", SqlDbType.VarChar, 6).Value = action;
         command.Parameters.Add("@ClientId", SqlDbType.Int).Value = clientId ?? (object)DBNull.Value;
+        command.Parameters.Add("@ClientCode", SqlDbType.VarChar, 4).Value =
+            clientCode?.Trim().ToUpperInvariant() ?? (object)DBNull.Value;
         command.Parameters.Add("@TaxId", SqlDbType.VarChar, 8).Value =
             taxId?.Trim() ?? (object)DBNull.Value;
         command.Parameters.Add("@FullName", SqlDbType.NVarChar, 100).Value =
@@ -205,10 +213,17 @@ public sealed class ClientRepository(IConfiguration configuration) : IClientRepo
     {
         return new ClientResponse(
             ClientId: reader.GetInt32(reader.GetOrdinal("ClientId")),
+            ClientCode: GetNullableString(reader, "ClientCode"),
             TaxId: reader.GetString(reader.GetOrdinal("TaxId")),
-            FullName: reader.GetString(reader.GetOrdinal("FullName")),
-            ShortName: reader.GetString(reader.GetOrdinal("ShortName")),
-            ResponsiblePerson: reader.GetString(reader.GetOrdinal("ResponsiblePerson")),
-            Address: reader.GetString(reader.GetOrdinal("Address")));
+            FullName: GetNullableString(reader, "FullName"),
+            ShortName: GetNullableString(reader, "ShortName"),
+            ResponsiblePerson: GetNullableString(reader, "ResponsiblePerson"),
+            Address: GetNullableString(reader, "Address"));
+    }
+
+    private static string? GetNullableString(SqlDataReader reader, string columnName)
+    {
+        var ordinal = reader.GetOrdinal(columnName);
+        return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
     }
 }

@@ -18,11 +18,12 @@ import {
 function getInitialForm(mode, client) {
   if (mode === 'edit' && client) {
     return {
+      clientCode: client.clientCode ?? '',
       taxId: client.taxId,
-      fullName: client.fullName,
-      shortName: client.shortName,
-      responsiblePerson: client.responsiblePerson,
-      address: client.address,
+      fullName: client.fullName ?? '',
+      shortName: client.shortName ?? '',
+      responsiblePerson: client.responsiblePerson ?? '',
+      address: client.address ?? '',
     }
   }
 
@@ -92,6 +93,16 @@ export function ClientDialog({ mode, client, open, onClose, onSaved }) {
         <DialogContent dividers>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <TextField
+              fullWidth
+              label="客編"
+              value={form.clientCode}
+              onChange={handleChange('clientCode')}
+              error={Boolean(errors.clientCode)}
+              helperText={errors.clientCode || '選填，格式：A001。'}
+              inputProps={{ maxLength: 4, inputMode: 'text' }}
+            />
+
+            <TextField
               autoFocus
               fullWidth
               label="統編"
@@ -111,7 +122,6 @@ export function ClientDialog({ mode, client, open, onClose, onSaved }) {
               error={Boolean(errors.fullName)}
               helperText={errors.fullName}
               inputProps={{ maxLength: 100 }}
-              required
             />
 
             <TextField
@@ -122,7 +132,6 @@ export function ClientDialog({ mode, client, open, onClose, onSaved }) {
               error={Boolean(errors.shortName)}
               helperText={errors.shortName}
               inputProps={{ maxLength: 50 }}
-              required
             />
 
             <TextField
@@ -133,7 +142,6 @@ export function ClientDialog({ mode, client, open, onClose, onSaved }) {
               error={Boolean(errors.responsiblePerson)}
               helperText={errors.responsiblePerson}
               inputProps={{ maxLength: 100 }}
-              required
             />
 
             <TextField
@@ -146,7 +154,6 @@ export function ClientDialog({ mode, client, open, onClose, onSaved }) {
               inputProps={{ maxLength: 255 }}
               multiline
               minRows={2}
-              required
             />
 
             {submitError && <Alert severity="error">{submitError}</Alert>}

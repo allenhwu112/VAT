@@ -3,6 +3,7 @@ import test from 'node:test'
 import { emptyClientForm, toClientRequest, validateClientForm } from './clients.js'
 
 const validForm = {
+  clientCode: 'A001',
   taxId: '12345678',
   fullName: '測試客戶股份有限公司',
   shortName: '測試客戶',
@@ -10,8 +11,9 @@ const validForm = {
   address: '台北市中正區測試路 1 號',
 }
 
-test('defines an empty client form with every required field', () => {
+test('defines an empty client form with all client fields', () => {
   assert.deepEqual(emptyClientForm, {
+    clientCode: '',
     taxId: '',
     fullName: '',
     shortName: '',
@@ -24,25 +26,44 @@ test('accepts a valid client form', () => {
   assert.deepEqual(validateClientForm(validForm), {})
 })
 
-test('requires every client field', () => {
+test('requires only the tax ID', () => {
   const errors = validateClientForm(emptyClientForm)
 
-  assert.equal(errors.taxId, '統編為必填欄位。')
-  assert.equal(errors.fullName, '客戶全稱為必填欄位。')
-  assert.equal(errors.shortName, '簡稱為必填欄位。')
-  assert.equal(errors.responsiblePerson, '負責人為必填欄位。')
-  assert.equal(errors.address, '地址為必填欄位。')
+  assert.deepEqual(errors, { taxId: '統編為必填欄位。' })
 })
 
-test('rejects invalid tax IDs and whitespace-only required fields', () => {
+test('rejects invalid tax IDs and client codes but allows whitespace-only optional fields', () => {
   const errors = validateClientForm({
     ...validForm,
     taxId: '1234567A',
+    clientCode: 'A01',
     fullName: '   ',
   })
 
   assert.equal(errors.taxId, '統編格式不正確，請輸入 8 碼數字。')
-  assert.equal(errors.fullName, '客戶全稱為必填欄位。')
+  assert.equal(errors.clientCode, '客編格式不正確，請輸入 1 碼英文加 3 碼數字。')
+  assert.equal(errors.fullName, undefined)
+})
+
+test('converts blank optional fields to null for the API request', () => {
+  assert.deepEqual(
+    toClientRequest({
+      clientCode: '  ',
+      taxId: ' 12345678 ',
+      fullName: '  ',
+      shortName: '',
+      responsiblePerson: '   ',
+      address: '',
+    }),
+    {
+      clientCode: null,
+      taxId: '12345678',
+      fullName: null,
+      shortName: null,
+      responsiblePerson: null,
+      address: null,
+    },
+  )
 })
 
 test('rejects client values over the declared limits', () => {
@@ -63,6 +84,7 @@ test('rejects client values over the declared limits', () => {
 test('trims all client fields before sending the API request', () => {
   assert.deepEqual(
     toClientRequest({
+      clientCode: ' a001 ',
       taxId: ' 12345678 ',
       fullName: ' 測試客戶股份有限公司 ',
       shortName: ' 測試客戶 ',
@@ -70,6 +92,7 @@ test('trims all client fields before sending the API request', () => {
       address: ' 台北市中正區測試路 1 號 ',
     }),
     {
+      clientCode: 'A001',
       taxId: '12345678',
       fullName: '測試客戶股份有限公司',
       shortName: '測試客戶',

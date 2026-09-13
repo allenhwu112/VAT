@@ -32,10 +32,10 @@ internal static class Program
                 ContentRootPath = AppContext.BaseDirectory,
             });
 
-            var connectionString = builder.Configuration.GetConnectionString("VatDatabase");
+            var connectionString = builder.Configuration.GetConnectionString("VAT");
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                Console.Error.WriteLine("Missing configuration: ConnectionStrings:VatDatabase.");
+                Console.Error.WriteLine("Missing configuration: ConnectionStrings:VAT.");
                 return 2;
             }
 
