@@ -125,7 +125,7 @@ export function InvoicesPage() {
           <Typography component="h1" id="invoice-page-title" variant="h3">
             發票管理
           </Typography>
-          <p className="intro">管理客戶適用的電子發票、收銀機與紙本發票方式。</p>
+          <p className="intro">客戶使用的發票種類</p>
         </div>
         <Typography className="record-count" variant="body2">
           共 {invoices.length} 筆

@@ -7,15 +7,16 @@
   "scripts": {
     "start": "npm run migrate:vat && concurrently --kill-others-on-fail --names frontend,backend \"npm run frontend\" \"npm run backend\"",
     "frontend": "npm --workspace apps/frontend run dev -- --host localhost",
-    "backend": "scripts\\dotnet.cmd run --project apps/backend/Vat.Api/Vat.Api.csproj --no-restore --urls http://localhost:5000",
+    "backend": "node scripts/dotnet.js run --project apps/backend/Vat.Api/Vat.Api.csproj --no-restore --urls http://localhost:5000",
     "build": "npm run build:frontend && npm run build:backend",
     "build:frontend": "npm --workspace apps/frontend run build",
-    "build:backend": "scripts\\dotnet.cmd build apps/backend/Vat.Api/Vat.Api.csproj --no-restore && scripts\\dotnet.cmd build apps/backend/Vat.Migrations/Vat.Migrations.csproj --no-restore",
-    "restore:backend": "scripts\\dotnet.cmd restore apps/backend/Vat.Api/Vat.Api.csproj --configfile NuGet.Config && scripts\\dotnet.cmd restore apps/backend/Vat.Migrations/Vat.Migrations.csproj --configfile NuGet.Config && scripts\\dotnet.cmd restore apps/backend/Vat.Migrations.Tests/Vat.Migrations.Tests.csproj --configfile NuGet.Config && scripts\\dotnet.cmd restore apps/backend/Vat.Api.Tests/Vat.Api.Tests.csproj --configfile NuGet.Config",
-    "test:backend": "scripts\\dotnet.cmd test apps/backend/Vat.Migrations.Tests/Vat.Migrations.Tests.csproj --no-restore && scripts\\dotnet.cmd test apps/backend/Vat.Api.Tests/Vat.Api.Tests.csproj --no-restore -c Release -p:UseAppHost=false",
-    "migrate:vat": "scripts\\dotnet.cmd run --project apps/backend/Vat.Migrations/Vat.Migrations.csproj --no-restore --",
-    "migrate:vat:check": "scripts\\dotnet.cmd run --project apps/backend/Vat.Migrations/Vat.Migrations.csproj --no-restore -- --check",
-    "migrate:vat:down": "scripts\\dotnet.cmd run --project apps/backend/Vat.Migrations/Vat.Migrations.csproj --no-restore -- --down"
+    "build:backend": "node scripts/dotnet.js build apps/backend/Vat.Api/Vat.Api.csproj --no-restore && node scripts/dotnet.js build apps/backend/Vat.Migrations/Vat.Migrations.csproj --no-restore",
+    "restore:backend": "node scripts/dotnet.js restore apps/backend/Vat.Api/Vat.Api.csproj --configfile NuGet.Config && node scripts/dotnet.js restore apps/backend/Vat.Migrations/Vat.Migrations.csproj --configfile NuGet.Config && node scripts/dotnet.js restore apps/backend/Vat.Migrations.Tests/Vat.Migrations.Tests.csproj --configfile NuGet.Config && node scripts/dotnet.js restore apps/backend/Vat.Api.Tests/Vat.Api.Tests.csproj --configfile NuGet.Config",
+    "test:backend": "node scripts/dotnet.js test apps/backend/Vat.Migrations.Tests/Vat.Migrations.Tests.csproj --no-restore && node scripts/dotnet.js test apps/backend/Vat.Api.Tests/Vat.Api.Tests.csproj --no-restore -c Release -p:UseAppHost=false",
+    "test:tooling": "node --test scripts/dotnet.test.js",
+    "migrate:vat": "node scripts/dotnet.js run --project apps/backend/Vat.Migrations/Vat.Migrations.csproj --no-restore --",
+    "migrate:vat:check": "node scripts/dotnet.js run --project apps/backend/Vat.Migrations/Vat.Migrations.csproj --no-restore -- --check",
+    "migrate:vat:down": "node scripts/dotnet.js run --project apps/backend/Vat.Migrations/Vat.Migrations.csproj --no-restore -- --down"
   },
   "devDependencies": {
     "concurrently": "^10.0.4"

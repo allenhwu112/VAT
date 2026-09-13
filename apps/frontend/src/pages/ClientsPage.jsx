@@ -97,7 +97,7 @@ export function ClientsPage() {
           <Typography component="h1" id="client-page-title" variant="h3">
             客戶管理
           </Typography>
-          <p className="intro">管理 VAT 系統客戶主檔資料。</p>
+          <p className="intro">客戶基本資料及稅務資訊</p>
         </div>
         <Typography className="record-count" variant="body2">
           共 {clients.length} 筆

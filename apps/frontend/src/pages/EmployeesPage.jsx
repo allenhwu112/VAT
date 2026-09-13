@@ -106,7 +106,7 @@ export function EmployeesPage() {
           <Typography component="h1" id="employee-page-title" variant="h3">
             員工管理
           </Typography>
-          <p className="intro">管理 VAT 系統員工基本資料與登入密碼。</p>
+          <p className="intro">員工基本資料</p>
         </div>
         <Typography className="record-count" variant="body2">
           共 {employees.length} 筆

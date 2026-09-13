@@ -20,11 +20,11 @@ apps/
 - .NET 10 SDK
 - 本機 SQL Server（預設執行個體 `MSSQLSERVER`）與 `VAT` 資料庫
 
-本機 .NET SDK 安裝在 `%USERPROFILE%\.dotnet`。根目錄的 `scripts\dotnet.cmd` 會優先使用這個 SDK，避免受到系統既有 .NET runtime 的影響。
+根目錄 npm scripts 透過 `scripts/dotnet.js` 啟動 .NET SDK，支援 macOS 與 Windows。它會優先使用本機 SDK：macOS 的 `$HOME/.dotnet/dotnet` 或 Windows 的 `%USERPROFILE%\.dotnet\dotnet.exe`，若找不到則使用 `PATH` 中的 `dotnet`。`scripts\dotnet.cmd` 保留供直接在 Windows 使用。
 
 ## 安裝依賴
 
-```powershell
+```sh
 npm install
 npm run restore:backend
 ```
@@ -39,11 +39,13 @@ npm.cmd start
 
 ## 啟動專案
 
-從 repository 根目錄執行：
+從 repository 根目錄，在 macOS Terminal 或 Windows PowerShell 執行：
 
-```powershell
+```sh
 npm start
 ```
+
+`npm start` 會先執行待處理的 VAT migration，再同時啟動前端與後端；請只在已確認的目標資料庫上執行。
 
 會同時啟動：
 
@@ -60,11 +62,12 @@ npm.cmd start
 
 ## 可用指令
 
-```powershell
+```sh
 npm run frontend       # 只啟動 Vite
 npm run backend        # 只啟動 .NET API
 npm run restore:backend # 使用 repository NuGet 設定還原後端套件
 npm run test:backend    # 執行 migration 與 API 測試
+npm run test:tooling    # 執行跨平台 .NET launcher 測試
 npm --workspace apps/frontend run test # 執行前端表單測試
 npm run migrate:vat:check # 唯讀檢查 VAT 資料庫連線
 npm run migrate:vat     # 套用待執行的 FluentMigrator migrations
